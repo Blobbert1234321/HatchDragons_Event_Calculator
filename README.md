@@ -22,7 +22,3 @@ Open the extra settings to change ingredient or fish values, inventory, bonuses,
 - The optional 1.5× multiplier costs 1,085 gems and lasts five days.
 - Settings are saved on your device. **Share settings** creates a link with your inputs, and **Reset** restores the defaults.
 - Results are estimates. Your actual rewards and progress may vary.
-
-## Updating the website
-
-Upload replacement files to this repository and click **Commit changes**. GitHub Pages will update the website automatically.
