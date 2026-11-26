@@ -21,6 +21,3 @@ Open the extra settings to change ingredient or fish values, inventory, bonuses,
 - Settings are saved on your device. **Share settings** creates a link with your inputs, and **Reset** restores the defaults.
 - Results are estimates. Your actual rewards and progress may vary.
 
-## Updating the website
-
-Upload replacement files to this repository and click **Commit changes**. GitHub Pages will update the website automatically.
