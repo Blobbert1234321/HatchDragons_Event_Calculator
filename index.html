@@ -21,7 +21,7 @@
     </header>
     <main>
       <section class="intro" aria-labelledby="page-title">
-        <div><p class="eyebrow">LESS GUESSWORK. MORE REWARDS.</p><h1 id="page-title">Make every resource count.</h1><p class="intro-copy">Plan your event, compare gem costs, and know which reward to aim for each day.</p></div>
+        <div><h1 id="page-title">Event Calculator</h1></div>
         <div class="event-tabs" role="tablist" aria-label="Event type">
           <button role="tab" id="tab-cooking" aria-controls="calculator-panel" aria-selected="true" data-event="cooking" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 5 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 3 2 4 3 4 2-3 0-6 0-10Z"/></svg> Cooking</button>
           <button role="tab" id="tab-fishing" aria-controls="calculator-panel" aria-selected="false" data-event="fishing" tabindex="-1" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c4-6 10-6 13 0l5-4v8l-5-4c-3 6-9 6-13 0Z"/><circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none"/><path d="m10 7 3-3 1 4m-4 9 3 3 1-4"/></svg> Fishing</button>
@@ -38,13 +38,13 @@
           <div id="error-message" class="error-message" role="alert" hidden></div>
           <div id="busy-panel" class="busy-panel" hidden><div class="spinner" aria-hidden="true"></div><div><strong>Finding your best combination</strong><p id="busy-message">Calculating…</p></div></div>
           <div id="results"><div class="empty-state"><span class="empty-symbol" aria-hidden="true">✦</span><h2>Your next event, planned.</h2><p>Choose your settings and calculate a plan to see resources, gem costs, and your reward schedule.</p></div></div>
-          <p class="estimate-note"><strong>A planning estimate, not a guarantee.</strong> Random drops, catches, combo rewards, and your actual play times can change the outcome. No connection to your game account is needed.</p>
+          <p class="estimate-note">Results are estimates. Your actual rewards and progress may vary.</p>
         </section>
       </div>
     </main>
     <footer class="site-footer"><span>Built for the HatchDragons community. Unofficial and not affiliated with the game developers.</span><a href="https://github.com/Blobbert1234321/HatchDragons_Event_Calculator" target="_blank" rel="noopener noreferrer">Project on GitHub</a></footer>
   </div>
-  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-head"><h2 id="help-title">A little planning goes a long way.</h2><button class="quiet-button" id="close-help" type="button">Close</button></div><div id="help-content"></div></dialog>
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-head"><h2 id="help-title">How it works</h2><button class="quiet-button" id="close-help" type="button">Close</button></div><div id="help-content"></div></dialog>
   <div id="toast" role="status" class="toast" hidden></div>
 </body>
 </html>
