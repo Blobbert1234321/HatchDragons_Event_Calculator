@@ -67,8 +67,8 @@ function renderForm(){
   let specific;
   if(cooking){
     specific=advanced('Ingredients & bonuses',
-      conditional('!remainingEventMode',input('freeBonusRoundsPerIngredient','Free bonus rounds / ingredient',{max:10000,hint:'Across the whole event. Each round bonuses five ingredients within your free cooking capacity.'}))+
-      conditional('remainingEventMode',input('remainingFreeBonusRoundsPerIngredient','Remaining free bonus rounds / ingredient',{max:10000,hint:'Future bonus rounds only; each round covers five ingredients.'}))+
+      conditional('!remainingEventMode',input('freeBonusRoundsPerIngredient','Expected bonus batches per ingredient',{max:10000,hint:'Each bonus batch assumes 5 of each enabled ingredient receive bonus points. For example, 4 batches means up to 20 of each ingredient get bonuses through regular cooking. Instant cooks can add more.'}))+
+      conditional('remainingEventMode',input('remainingFreeBonusRoundsPerIngredient','Remaining expected bonus batches per ingredient',{max:10000,hint:'Count only the batches you expect during the time left. Each batch assumes 5 of each enabled ingredient get bonus points through regular cooking. Instant cooks can add more.'}))+
       '<p class="helper" style="margin-bottom:13px">Enable bonuses you plan to use. Starting inventory applies in From now mode.</p>'+
       vectorInputs('currentIngredientInventory',INGREDIENTS,{label:'Owned',secondPath:'bonusEnabled',secondLabel:'Bonus',secondCheck:true})+
       '<p class="helper">Instant cooks add shared bonus slots, used for the largest bonuses first. All parsnip, fish, and meat are cooked.</p>')+
@@ -99,7 +99,7 @@ function renderForm(){
       '<p class="helper">The three chances must total 100%. Combo-spawned fish can trigger more combos.</p>');
   }
   const comparison=advanced('Compare daily activity',check('rangeMode','Compare a range of daily actions','Find out how playing more or less changes your resource budget.')+
-    conditional('rangeMode',`<div class="field-row three">${input('rangeMin','From',{max:16})}${input('rangeMax','To',{max:16})}${input('rangeStep','Step',{min:1,max:16})}</div><p class="helper">Each row is a complete scenario. Choose a row to see its own schedule and details.</p>`));
+    conditional('rangeMode',`<div class="field-row three">${input('rangeMin','From',{max:16})}${input('rangeMax','To',{max:16})}${input('rangeStep','Step',{min:1,max:16})}</div><p class="helper">Each row shows the resources and extra gems needed for that many daily actions.</p>`));
   const rules=advanced('Event length, gem costs & rewards',input('eventDays','Full event length (days)',{min:.01,max:30,step:'any'})+
     input('cooldownHours','Free action cooldown (hours)',{min:.1,max:24,step:'any'})+
     `<div class="field-row">${input(cooking?'gemsPerFancyBag':'gemsPerFishHurry',cooking?'Gems / fancy bag':'Gems / fish hurry',{min:.01,step:'any'})}${input(cooking?'gemsPerInstantCook':'gemsPerGoldenHook',cooking?'Gems / instant cook':'Gems / golden hook',{min:.01,step:'any'})}</div>`+
@@ -133,7 +133,8 @@ function runCalculation(e){
     if(data.progress){$('#busy-message').textContent=data.progress.message;return;}
     stopJob();
     if(data.error){showError(data.error);return;}
-    cache[type]=data.result;signatures[type]=signature;activeScenario=0;
+    cache[type]=data.result;signatures[type]=signature;
+    activeScenario=Math.max(0,data.result.scenarios.findIndex(s=>s.config.dailyActions===JSON.parse(signature).dailyActions));
     $('#export-button').disabled=false;renderResults();
     if(signature!==JSON.stringify(states[type]))markStale();
   };
@@ -145,7 +146,9 @@ function showError(message){$('#error-message').textContent=message;$('#error-me
 function showToast(text){clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>{$('#toast').hidden=true;},4500);}
 function switchEvent(type){
   if(type===eventType&&form.children.length)return;
-  if(worker)stopJob();eventType=type;activeScenario=0;$('#error-message').hidden=true;
+  if(worker)stopJob();eventType=type;
+  activeScenario=Math.max(0,cache[type]?.scenarios.findIndex(s=>s.config.dailyActions===states[type].dailyActions)??0);
+  $('#error-message').hidden=true;
   document.querySelectorAll('[data-event]').forEach(button=>{const active=button.dataset.event===type;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});
   $('#calculator-panel').setAttribute('aria-labelledby',`tab-${type}`);
   renderForm();

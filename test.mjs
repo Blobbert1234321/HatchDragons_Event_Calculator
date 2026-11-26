@@ -4,9 +4,11 @@ import {calculate,DEFAULTS,clone,prepare,progressPoints,COSTS,simulateFishing,ev
 const near=(a,b,label)=>assert.ok(Math.abs(a-b)<1e-7,`${label}: browser ${a}, MATLAB ${b}`);
 const array=v=>Array.isArray(v)?v:[v];
 const cases=JSON.parse(fs.readFileSync(new URL('./test-data/cases.json',import.meta.url),'utf8'));
+// Reference cases were exported with the earlier defaults; keep their inputs explicit.
+const referenceDefaults=type=>({...clone(DEFAULTS[type]),desiredCompletions:3,dailyActions:12,usePointsMultiplier:true,rangeMode:false,...(type==='cooking'?{freeBonusRoundsPerIngredient:7}:{})});
 for(const item of cases){
   const ref=JSON.parse(fs.readFileSync(new URL(`./test-data/${item.name}.json`,import.meta.url),'utf8'));
-  const s=calculate(item.type,{...clone(DEFAULTS[item.type]),...item.settings}).scenarios[0],p=s.best;
+  const s=calculate(item.type,{...referenceDefaults(item.type),...item.settings}).scenarios[0],p=s.best;
   if(item.type==='cooking'){
     const pairs={a:'FancyBags',b:'InstantCooks',buyA:'FancyBagsToBuy',buyB:'InstantCooksToBuy',score:'ExpectedPoints',resourceGems:'ResourceGems',totalGems:'ExtraGems',multiplierGems:'MultiplierGems',earlyPoints:'BoostedPeriodPoints',latePoints:'UnboostedPeriodPoints'};
     for(const [key,field] of Object.entries(pairs))near(p[key],ref.summary[field],`${item.name} ${key}`);
@@ -37,12 +39,12 @@ for(const type of ['cooking','fishing']){
   assert.throws(()=>calculate(type,{...clone(DEFAULTS[type]),dailyActions:17}),/Daily actions/);
 }
 const c=prepare('fishing',{...clone(DEFAULTS.fishing),usePointsMultiplier:false,comboSpawnOutcomes:[0,0,0],comboHookOutcomes:[0,0,0]});
-const r=simulateFishing(c,10,0,0),spawns=(84+10)*5;
+const r=simulateFishing(c,10,0,0),spawns=(c.days*c.dailyActions+10)*5;
 r.catches.forEach((v,i)=>near(v,spawns*c.spawnRates[i]*c.catchRates[i],`analytic catch ${i}`));
 near(r.hooksEarned,0,'no hook rewards');
 const noPurchases=calculate('fishing',{...clone(DEFAULTS.fishing),allowGoldenHookPurchases:false,goldenHooksOwned:30}).scenarios[0];
 assert.equal(noPurchases.best.buyB,0);
-const small=calculate('cooking',{...clone(DEFAULTS.cooking),remainingEventMode:true,remainingDays:.2,currentRound:3,currentReward:15,pointsTowardsNextReward:100,usePointsMultiplier:false}).scenarios[0];
+const small=calculate('cooking',{...clone(DEFAULTS.cooking),desiredCompletions:3,rangeMode:false,remainingEventMode:true,remainingDays:.2,currentRound:3,currentReward:15,pointsTowardsNextReward:100,usePointsMultiplier:false}).scenarios[0];
 near(small.schedule.at(-1).hours,4.8,'partial last day');near(small.schedule.at(-1).cumulative,15380,'partial final target');
 console.log('PASS validation, completed targets, activity ranges, hook purchase controls, analytic catch rates, and partial-day schedules.');
 const original=prepare('cooking',DEFAULTS.cooking);
@@ -64,3 +66,16 @@ const custom=calculate('cooking',doubled).scenarios[0];
 near(custom.bagAverages[0].one,2*calculate('cooking',DEFAULTS.cooking).scenarios[0].bagAverages[0].one,'custom bag averages');
 assert.ok(custom.best.a<29,'Custom point values should change the resource recommendation.');
 console.log('PASS editable ingredient points, bonus values, bag probabilities, priorities, resource recommendations, and validation.');
+for(const type of ['cooking','fishing']){
+  const d=DEFAULTS[type];
+  assert.equal(d.desiredCompletions,2); assert.equal(d.dailyActions,10);
+  assert.equal(d.usePointsMultiplier,false); assert.equal(d.rangeMode,true);
+  const fresh=calculate(type,d);
+  assert.deepEqual(fresh.scenarios.map(s=>s.config.dailyActions),[6,7,8,9,10,11,12,13,14]);
+  assert.ok(fresh.scenarios.every(s=>s.best.score>=9230-1e-8 && s.best.multiplierGems===0));
+}
+assert.equal(DEFAULTS.cooking.freeBonusRoundsPerIngredient,4);
+const batches=prepare('cooking',{...clone(DEFAULTS.cooking),rangeMode:false,freeBonusRoundsPerIngredient:4});
+const batchPlan=evaluateCooking(batches,40,50);
+assert.ok(batchPlan.freeBonus.every(n=>n<=20+1e-8));
+console.log('PASS new first-visit defaults, comparison range, multiplier off, and four bonus batches.');

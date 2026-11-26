@@ -7,17 +7,17 @@ export const COSTS = [
 export const INGREDIENTS = ['Mushroom','Potato','Parsnip','Fish','Meat'];
 export const COLORS = ['White','Red','Blue','Yellow','Purple'];
 export const POLICIES = ['No golden hooks','Purple only','Purple + yellow','Purple + yellow + blue','Purple + yellow + blue + red','All colors'];
-const common = {eventDays:7,desiredCompletions:3,dailyActions:12,remainingEventMode:false,
+const common = {eventDays:7,desiredCompletions:2,dailyActions:10,remainingEventMode:false,
   remainingDays:2.8,currentRound:1,currentReward:12,pointsTowardsNextReward:100,
-  usePointsMultiplier:true,pointsMultiplierCostGems:1085,pointsMultiplierDays:5,
+  usePointsMultiplier:false,pointsMultiplierCostGems:1085,pointsMultiplierDays:5,
   multiplierAlreadyPurchased:false,multiplierDaysRemaining:0,
-  rangeMode:false,rangeMin:6,rangeMax:14,rangeStep:1,cooldownHours:1.5,rewardPointCosts:COSTS};
+  rangeMode:true,rangeMin:6,rangeMax:14,rangeStep:1,cooldownHours:1.5,rewardPointCosts:COSTS};
 export const DEFAULTS = {
   cooking:{...common,ingredientsPerBag:6,ingredientsPerCook:5,ingredientsPerInstantCook:5,
     baseIngredientPoints:[10,12,16,22,28],bonusPoints:[2,2,3,4,5],
     basicBagPercentages:[38.53,25.55,18.54,11.64,5.73],fancyBagPercentages:[0,7.49,42.75,27.54,22.22],
     fancyBagsOwned:0,instantCooksOwned:0,useEqualAmounts:false,gemsPerFancyBag:20,gemsPerInstantCook:25,
-    freeBonusRoundsPerIngredient:7,remainingFreeBonusRoundsPerIngredient:3,
+    freeBonusRoundsPerIngredient:4,remainingFreeBonusRoundsPerIngredient:3,
     currentIngredientInventory:[0,0,0,0,0],bonusEnabled:[true,true,true,true,true]},
   fishing:{...common,fishPerSpawn:5,fishPerSuccessfulCatch:2,fishHurriesOwned:0,goldenHooksOwned:0,
     gemsPerFishHurry:30,gemsPerGoldenHook:10,fishPointValues:[6,8,10,12,14],
@@ -86,8 +86,8 @@ export function prepare(type,input){
     for(const key of ['ingredientsPerBag','ingredientsPerCook','ingredientsPerInstantCook'])number(c[key],key,1,100,true);
     for(const key of ['fancyBagsOwned','instantCooksOwned'])number(c[key],key,0,10000,true);
     number(c.gemsPerFancyBag,'Fancy bag cost',.01);number(c.gemsPerInstantCook,'Instant cook cost',.01);
-    number(c.freeBonusRoundsPerIngredient,'Free bonus rounds',0,10000,true);
-    number(c.remainingFreeBonusRoundsPerIngredient,'Remaining free bonus rounds',0,10000,true);
+    number(c.freeBonusRoundsPerIngredient,'Expected bonus batches per ingredient',0,10000,true);
+    number(c.remainingFreeBonusRoundsPerIngredient,'Remaining expected bonus batches per ingredient',0,10000,true);
     vector(c.currentIngredientInventory,'Starting ingredients',5,0,10000,true);
     assert(Array.isArray(c.bonusEnabled)&&c.bonusEnabled.length===5&&c.bonusEnabled.every(v=>typeof v==='boolean'),'Select ingredient bonuses.');
     c.startInventory=c.remainingEventMode?c.currentIngredientInventory:zeros();
