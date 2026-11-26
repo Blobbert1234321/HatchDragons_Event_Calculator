@@ -14,6 +14,8 @@ const common = {eventDays:7,desiredCompletions:3,dailyActions:12,remainingEventM
   rangeMode:false,rangeMin:6,rangeMax:14,rangeStep:1,cooldownHours:1.5,rewardPointCosts:COSTS};
 export const DEFAULTS = {
   cooking:{...common,ingredientsPerBag:6,ingredientsPerCook:5,ingredientsPerInstantCook:5,
+    baseIngredientPoints:[10,12,16,22,28],bonusPoints:[2,2,3,4,5],
+    basicBagPercentages:[38.53,25.55,18.54,11.64,5.73],fancyBagPercentages:[0,7.49,42.75,27.54,22.22],
     fancyBagsOwned:0,instantCooksOwned:0,useEqualAmounts:false,gemsPerFancyBag:20,gemsPerInstantCook:25,
     freeBonusRoundsPerIngredient:7,remainingFreeBonusRoundsPerIngredient:3,
     currentIngredientInventory:[0,0,0,0,0],bonusEnabled:[true,true,true,true,true]},
@@ -74,6 +76,13 @@ export function prepare(type,input){
   }
   if(!c.remainingTarget)c.multiplierFee=0;
   if(type==='cooking'){
+    vector(c.baseIngredientPoints,'Ingredient base points',5,.001,100000);
+    vector(c.bonusPoints,'Ingredient bonus points',5,0,100000);
+    vector(c.basicBagPercentages,'Basic bag chances',5,0,100);
+    vector(c.fancyBagPercentages,'Fancy bag chances',5,0,100);
+    assert(sum(c.basicBagPercentages)>0,'At least one basic bag chance must be greater than zero.');
+    assert(sum(c.fancyBagPercentages)>0,'At least one fancy bag chance must be greater than zero.');
+    c.basicRates=norm(c.basicBagPercentages);c.fancyRates=norm(c.fancyBagPercentages);
     for(const key of ['ingredientsPerBag','ingredientsPerCook','ingredientsPerInstantCook'])number(c[key],key,1,100,true);
     for(const key of ['fancyBagsOwned','instantCooksOwned'])number(c[key],key,0,10000,true);
     number(c.gemsPerFancyBag,'Fancy bag cost',.01);number(c.gemsPerInstantCook,'Instant cook cost',.01);
@@ -124,13 +133,12 @@ export function calculate(type,input,onProgress=()=>{}){
   });
   return {type,scenarios};
 }
-const BASE=[10,12,16,22,28],BONUS=[2,2,3,4,5];
-const BASIC=norm([38.53,25.55,18.54,11.64,5.73]);
-const FANCY=norm([0,7.49,42.75,27.54,22.22]);
-function cookSlots(collected,freeCapacity,instantCapacity,quota,enabled){
+function cookSlots(collected,freeCapacity,instantCapacity,quota,c){
+  const BASE=c.baseIngredientPoints,BONUS=c.bonusPoints,enabled=c.bonusEnabled;
   const used=zeros(),freeBonus=zeros(),instantBonus=zeros();
   let capacity=freeCapacity+instantCapacity;
-  for(const i of [4,3,2,1,0]){used[i]=Math.min(collected[i],Math.max(0,capacity));capacity-=used[i];}
+  const cookingPriority=[0,1,2,3,4].sort((a,b)=>BASE[b]-BASE[a]);
+  for(const i of cookingPriority){used[i]=Math.min(collected[i],Math.max(0,capacity));capacity-=used[i];}
   const priority=[0,1,2,3,4].sort((a,b)=>BONUS[b]*enabled[b]-BONUS[a]*enabled[a]);
   for(const i of priority)if(enabled[i]){freeBonus[i]=Math.min(used[i],quota,freeCapacity);freeCapacity-=freeBonus[i];}
   for(const i of priority)if(enabled[i]){instantBonus[i]=Math.min(used[i]-freeBonus[i],instantCapacity);instantCapacity-=instantBonus[i];}
@@ -138,21 +146,22 @@ function cookSlots(collected,freeCapacity,instantCapacity,quota,enabled){
   return {used,freeBonus,instantBonus,earned};
 }
 export function evaluateCooking(c,bags,instants){
+  const BASE=c.baseIngredientPoints,BONUS=c.bonusPoints,BASIC=c.basicRates,FANCY=c.fancyRates;
   const totalBags=epsFloor(c.days*c.dailyActions),totalCooks=epsFloor(c.days*c.dailyActions);
   const fancy=scale(FANCY,bags*c.ingredientsPerBag),slots=instants*c.ingredientsPerInstantCook;
   const quota=c.freeRounds*c.ingredientsPerCook;
   const collected=add(add(c.startInventory,scale(BASIC,totalBags*c.ingredientsPerBag)),fancy);
   let r;
   if(!c.usePointsMultiplier){
-    r=cookSlots(collected,totalCooks*c.ingredientsPerCook,slots,quota,c.bonusEnabled);
+    r=cookSlots(collected,totalCooks*c.ingredientsPerCook,slots,quota,c);
     r.multiplierExtra=zeros();r.boostedUsed=zeros();r.earlyPoints=0;r.latePoints=sum(r.earned);
   }else{
     if(slots+1e-8<sum(fancy))return {feasible:false,score:-Infinity,used:zeros()};
     const earlyBags=epsFloor(c.boostDays*c.dailyActions),earlyCooks=epsFloor(c.boostDays*c.dailyActions);
     const earlyCollected=add(c.startInventory,scale(BASIC,earlyBags*c.ingredientsPerBag));
-    const early=cookSlots(earlyCollected,earlyCooks*c.ingredientsPerCook,Math.max(0,slots-sum(fancy)),quota*c.boostDays/c.days,c.bonusEnabled);
+    const early=cookSlots(earlyCollected,earlyCooks*c.ingredientsPerCook,Math.max(0,slots-sum(fancy)),quota*c.boostDays/c.days,c);
     const lateCollected=add(scale(BASIC,(totalBags-earlyBags)*c.ingredientsPerBag),earlyCollected.map((v,i)=>Math.max(0,v-early.used[i])));
-    const late=cookSlots(lateCollected,(totalCooks-earlyCooks)*c.ingredientsPerCook,0,quota*(c.days-c.boostDays)/c.days,c.bonusEnabled);
+    const late=cookSlots(lateCollected,(totalCooks-earlyCooks)*c.ingredientsPerCook,0,quota*(c.days-c.boostDays)/c.days,c);
     const fancyEarned=fancy.map((v,i)=>v*(BASE[i]+BONUS[i]*c.bonusEnabled[i]));
     r={used:add(add(fancy,early.used),late.used),boostedUsed:add(fancy,early.used),
       freeBonus:add(early.freeBonus,late.freeBonus),instantBonus:add(fancy.map((v,i)=>v*c.bonusEnabled[i]),early.instantBonus),
@@ -169,6 +178,7 @@ function cookingPlan(c,bags,instants,r){
     score:r.score,earlyPoints:r.earlyPoints,latePoints:r.latePoints,result:r};
 }
 function findCooking(c){
+  const BASE=c.baseIngredientPoints,BONUS=c.bonusPoints,BASIC=c.basicRates,FANCY=c.fancyRates;
   const averageFancy=sum(FANCY.map((v,i)=>v*BASE[i]));
   const averageBasic=sum(BASIC.map((v,i)=>v*BASE[i]));
   const bagAverages=[{name:'Basic bag',one:averageBasic,six:averageBasic*c.ingredientsPerBag,five:averageBasic*Math.min(c.ingredientsPerBag,c.ingredientsPerCook)},

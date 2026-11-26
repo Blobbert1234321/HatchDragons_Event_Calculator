@@ -42,12 +42,12 @@ function check(path,label,hint=''){return `<label class="check-field"><input typ
 const conditional=(when,content)=>`<div class="conditional" data-when="${when}">${content}</div>`;
 const section=(title,content,icon='✧')=>`<section class="form-section"><h3 class="section-caption"><span class="section-icon" aria-hidden="true">${icon}</span>${title}</h3>${content}</section>`;
 const advanced=(title,content,open=false)=>`<details class="advanced" ${open?'open':''}><summary>${title}</summary><div class="advanced-body">${content}</div></details>`;
-function vectorInputs(path,names,{label='Inventory',secondPath=null,secondLabel='',secondCheck=false,max=10000,secondMax=10000,scale=1,secondScale=1,step=1}={}){
+function vectorInputs(path,names,{label='Inventory',secondPath=null,secondLabel='',secondCheck=false,min=0,secondMin=0,max=10000,secondMax=10000,scale=1,secondScale=1,step=1}={}){
   const colors=eventType==='fishing'?['#eef1f6','#ef8d8d','#79aaf8','#e9cf75','#c5a2f3']:['#bba896','#d4bd8d','#d59b7b','#79b7c1','#c0869b'];
   return `<div class="compact-grid"><span class="column-title">${eventType==='fishing'?'Fish':'Ingredient'}</span><span class="column-title">${label}</span><span class="column-title">${secondLabel}</span></div>`+names.map((name,i)=>{
-    const first=`<input type="number" aria-label="${esc(name+' '+label)}" data-path="${path}.${i}" data-scale="${scale}" min="0" max="${max}" step="${step}" value="${get(path)?.[i]==null?'':esc(get(path)[i]*scale)}" required>`;
+    const first=`<input type="number" aria-label="${esc(name+' '+label)}" data-path="${path}.${i}" data-scale="${scale}" min="${min}" max="${max}" step="${step}" value="${get(path)?.[i]==null?'':esc(get(path)[i]*scale)}" required>`;
     let second='';
-    if(secondPath)second=secondCheck?`<span class="check-cell"><input type="checkbox" aria-label="${esc(name+' '+secondLabel)}" data-path="${secondPath}.${i}" ${get(secondPath)?.[i]?'checked':''}></span>`:`<input type="number" aria-label="${esc(name+' '+secondLabel)}" data-path="${secondPath}.${i}" data-scale="${secondScale}" min="0" max="${secondMax}" step="${step}" value="${get(secondPath)?.[i]==null?'':esc(get(secondPath)[i]*secondScale)}" required>`;
+    if(secondPath)second=secondCheck?`<span class="check-cell"><input type="checkbox" aria-label="${esc(name+' '+secondLabel)}" data-path="${secondPath}.${i}" ${get(secondPath)?.[i]?'checked':''}></span>`:`<input type="number" aria-label="${esc(name+' '+secondLabel)}" data-path="${secondPath}.${i}" data-scale="${secondScale}" min="${secondMin}" max="${secondMax}" step="${step}" value="${get(secondPath)?.[i]==null?'':esc(get(secondPath)[i]*secondScale)}" required>`;
     return `<div class="compact-grid"><span class="color-label"><span class="swatch" style="background:${colors[i]}" aria-hidden="true"></span>${name}</span>${first}${second||'<span></span>'}</div>`;
   }).join('');
 }
@@ -71,7 +71,12 @@ function renderForm(){
       conditional('remainingEventMode',input('remainingFreeBonusRoundsPerIngredient','Remaining free bonus rounds / ingredient',{max:10000,hint:'Future bonus rounds only; each round covers five ingredients.'}))+
       '<p class="helper" style="margin-bottom:13px">Enable bonuses you plan to use. Starting inventory applies in From now mode.</p>'+
       vectorInputs('currentIngredientInventory',INGREDIENTS,{label:'Owned',secondPath:'bonusEnabled',secondLabel:'Bonus',secondCheck:true})+
-      '<p class="helper">Instant cooks add shared bonus slots, allocated to meat, fish, then parsnip. All higher-point ingredients are cooked.</p>')+
+      '<p class="helper">Instant cooks add shared bonus slots, used for the largest bonuses first. All parsnip, fish, and meat are cooked.</p>')+
+      advanced('Ingredient points & bag chances',
+      '<h3>Points per ingredient</h3>'+vectorInputs('baseIngredientPoints',INGREDIENTS,{label:'Base',min:.001,max:100000,secondPath:'bonusPoints',secondLabel:'Bonus',secondMax:100000,step:'any'})+
+      '<p class="helper">Bonus switches above still apply.</p><h3>Bag chances (%)</h3>'+
+      vectorInputs('basicBagPercentages',INGREDIENTS,{label:'Basic %',max:100,secondPath:'fancyBagPercentages',secondLabel:'Fancy %',secondMax:100,step:'any'})+
+      '<p class="helper">Chances are adjusted to total 100% to account for rounding.</p>')+
       advanced('Cooking resource rules',check('useEqualAmounts','Use equal fancy bags and instant cooks','This can be infeasible with the multiplier: six fancy ingredients need more than one five-item instant cook.')+
       `<div class="field-row">${input('ingredientsPerBag','Items per bag',{min:1,max:100})}${input('ingredientsPerCook','Items per free cook',{min:1,max:100})}</div>`+
       input('ingredientsPerInstantCook','Items per instant cook',{min:1,max:100})+
