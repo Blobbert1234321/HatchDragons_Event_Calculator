@@ -8,3 +8,6 @@
 
 .event-tabs svg{width:20px;height:20px;flex-shrink:0}.compact-grid{font-size:.875rem}.field-hint,.helper{font-size:.875rem}
 
+.brand img.site-dragon{width:66px;height:48px;object-fit:contain;flex-shrink:0}
+@media(max-width:480px){.brand img.site-dragon{width:56px;height:42px}}
+
