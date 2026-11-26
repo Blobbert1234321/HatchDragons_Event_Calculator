@@ -231,14 +231,18 @@ $('#share-button').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(url.href);showToast('Settings link copied. It recreates your inputs, not your game account.');}
   catch{const text=prompt('Copy this settings link:',url.href);if(text)showToast('Your settings link is ready to share.');}
 });
-$('#export-button').addEventListener('click',()=>{
-  const all=cache[eventType];if(!all)return;const s=all.scenarios[activeScenario],c=s.config,p=s.best;
-  const rows=[['HatchDragons Event Calculator',eventType],['Daily actions',c.dailyActions],['Days planned',c.days],['Total target',c.totalTarget],['Starting points',c.startPoints],['Points still needed',c.remainingTarget],['Expected future points',p.score],['Resource A used',p.a],['Resource B used',p.b],['Resource A to buy',p.buyA],['Resource B to buy',p.buyB],['Resource gems',p.resourceGems],['Multiplier gems',p.multiplierGems],['Additional gems',p.totalGems],[],['Hour from start / now','Reward round','Last claimed reward','Progress toward next (%)','Total points','Points from now']];
-  s.schedule.forEach(d=>rows.push([d.hours,d.round,d.reward,d.progress,d.cumulative,d.pointsFromNow]));
-  if(s.details.length){rows.push([],Object.keys(s.details[0]));s.details.forEach(d=>rows.push(Object.values(d)));}
-  if(all.scenarios.length>1){rows.push([],['Daily actions','Resource A','Resource B','Extra gems']);all.scenarios.forEach(r=>rows.push([r.config.dailyActions,r.best.a,r.best.b,r.best.totalGems]));}
-  const csv='\uFEFF'+rows.map(row=>row.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\r\n');
-  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=`hatchdragons-${eventType}-plan.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+$('#export-button').addEventListener('click',async()=>{
+  const all=cache[eventType];if(!all)return;
+  const selected=activeScenario,type=eventType,button=$('#export-button');
+  button.disabled=true;button.textContent='Preparing spreadsheet…';
+  try{
+    const {createSpreadsheet}=await import('./spreadsheet.mjs');
+    const bytes=createSpreadsheet(all,selected);
+    const url=URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    const link=document.createElement('a');link.href=url;link.download=`hatchdragons-${type}-plan.xlsx`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+    showToast('Spreadsheet downloaded.');
+  }catch(error){showError('Could not create the spreadsheet. '+error.message);}
+  finally{button.disabled=!cache[eventType];button.textContent='Download Spreadsheet';}
 });
 $('#help-content').innerHTML=`<p>Choose your event, enter your goal and the resources you have, then click <strong>Calculate my plan</strong>. The calculator looks for the cheapest way to reach your goal.</p><h3>Already started?</h3><p>Choose <strong>From now</strong> and enter your time left and current progress. Your completion goal includes rounds you’ve already finished.</p><h3>Cooking</h3>${assumptions('cooking')}<h3>Fishing</h3>${assumptions('fishing')}<h3>Saving and sharing</h3><p>Your settings are saved on this device. Use <strong>Share settings</strong> to send someone your inputs, or <strong>Reset</strong> to start over.</p><p style="margin-top:18px">Results are estimates. Your actual rewards and progress may vary.</p>`;
 $('#help-button').addEventListener('click',()=>$('#help-dialog').showModal());

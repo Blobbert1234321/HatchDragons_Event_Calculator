@@ -11,6 +11,8 @@ Estimate the resources and gems needed for Cooking and Fishing events, and see d
 3. If the event has already started, choose **From now** and enter your time left and current progress.
 4. Click **Calculate my plan**.
 
+Use **Download Spreadsheet** to save an Excel workbook with your plan, breakdown, and comparison graphs. Estimated quantities display to one decimal place.
+
 Open the extra settings to change ingredient or fish values, inventory, bonuses, and other options.
 
 ## Notes
@@ -21,3 +23,6 @@ Open the extra settings to change ingredient or fish values, inventory, bonuses,
 - Settings are saved on your device. **Share settings** creates a link with your inputs, and **Reset** restores the defaults.
 - Results are estimates. Your actual rewards and progress may vary.
 
+## Updating the website
+
+Upload replacement files to this repository and click **Commit changes**. GitHub Pages will update the website automatically.

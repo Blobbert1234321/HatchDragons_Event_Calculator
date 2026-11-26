@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {calculate,DEFAULTS,clone,prepare,progressPoints,COSTS,simulateFishing,evaluateCooking} from './engines.mjs';
+import {createSpreadsheet,workbookSheets} from './spreadsheet.mjs';
 const near=(a,b,label)=>assert.ok(Math.abs(a-b)<1e-7,`${label}: browser ${a}, MATLAB ${b}`);
 const array=v=>Array.isArray(v)?v:[v];
 const cases=JSON.parse(fs.readFileSync(new URL('./test-data/cases.json',import.meta.url),'utf8'));
@@ -79,3 +80,32 @@ const batches=prepare('cooking',{...clone(DEFAULTS.cooking),rangeMode:false,free
 const batchPlan=evaluateCooking(batches,40,50);
 assert.ok(batchPlan.freeBonus.every(n=>n<=20+1e-8));
 console.log('PASS new first-visit defaults, comparison range, multiplier off, and four bonus batches.');
+
+// Read the stored ZIP records independently to check the downloaded workbook.
+function parts(bytes){
+  const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),out=new Map();let offset=0;
+  while(view.getUint32(offset,true)===0x04034b50){
+    const size=view.getUint32(offset+18,true),n=view.getUint16(offset+26,true),extra=view.getUint16(offset+28,true);
+    const start=offset+30+n+extra;
+    out.set(new TextDecoder().decode(bytes.slice(offset+30,offset+30+n)),new TextDecoder().decode(bytes.slice(start,start+size)));
+    offset=start+size;
+  }
+  return out;
+}
+for(const type of ['cooking','fishing']){
+  for(const settings of [DEFAULTS[type],{...clone(DEFAULTS[type]),remainingEventMode:true,rangeMode:false}]){
+    const all=calculate(type,settings),sheets=workbookSheets(all),archive=parts(createSpreadsheet(all));
+    assert.equal(archive.get('xl/workbook.xml').match(/<sheet /g).length,sheets.length);
+    assert.equal(sheets.some(s=>s.name==='Daily comparison'),settings.rangeMode);
+    assert.equal([...archive.keys()].filter(k=>/^xl\/charts\/chart\d+\.xml$/.test(k)).length,settings.rangeMode?3:2);
+    assert.equal(sheets[0].rows.find(r=>r[0]==='ADDITIONAL GEMS NEEDED')[1],all.scenarios[0].best.totalGems);
+    assert.equal(sheets.find(s=>s.name==='Breakdown').rows[0].at(-1),all.scenarios[0].details[0].points);
+    for(const sheet of sheets)for(const row of sheet.rows)for(const value of row)assert.ok(value!==undefined&&!(typeof value==='number'&&!Number.isFinite(value)));
+    assert.ok(archive.get('xl/styles.xml').includes('#,##0.0'));
+    assert.ok(archive.get('xl/worksheets/sheet1.xml').includes(String(all.scenarios[0].best.score)),'Full numeric precision must be retained.');
+    assert.ok(!archive.get('xl/workbook.xml').includes('Resource A'));
+  }
+  const complete=calculate(type,{...clone(DEFAULTS[type]),rangeMode:false,remainingEventMode:true,currentRound:2,currentReward:16,pointsTowardsNextReward:0});
+  assert.doesNotThrow(()=>createSpreadsheet(complete));
+}
+console.log('PASS Excel export for both events, ranges, current progress, completed targets, charts, purchase totals, and numeric precision.');
