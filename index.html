@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151e">
+  <meta name="description" content="Plan your HatchDragons cooking and fishing events. Compare resources, gem costs, and daily reward targets.">
+  <title>HatchDragons · Event Calculator</title>
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="HatchDragons Event Calculator home">
+        <img src="./icon.svg" width="42" height="42" alt="">
+        <span>HatchDragons<small>EVENT CALCULATOR</small></span>
+      </a>
+      <div class="header-actions"><span class="community-label">A community-made planner</span><button class="quiet-button" id="help-button" type="button">How it works</button></div>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow">LESS GUESSWORK. MORE REWARDS.</p><h1 id="page-title">Make every resource count.</h1><p class="intro-copy">Plan your event, compare gem costs, and know which reward to aim for each day.</p></div>
+        <div class="event-tabs" role="tablist" aria-label="Event type">
+          <button role="tab" id="tab-cooking" aria-controls="calculator-panel" aria-selected="true" data-event="cooking" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1 5 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 3 2 4 3 4 2-3 0-6 0-10Z"/></svg> Cooking</button>
+          <button role="tab" id="tab-fishing" aria-controls="calculator-panel" aria-selected="false" data-event="fishing" tabindex="-1" type="button"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c4-6 10-6 13 0l5-4v8l-5-4c-3 6-9 6-13 0Z"/><circle cx="7.5" cy="11" r=".7" fill="currentColor" stroke="none"/><path d="m10 7 3-3 1 4m-4 9 3 3 1-4"/></svg> Fishing</button>
+        </div>
+      </section>
+      <div class="calculator-layout" id="calculator-panel" role="tabpanel" aria-labelledby="tab-cooking">
+        <aside class="settings-panel">
+          <div class="panel-heading"><div><p class="eyebrow" id="event-kicker">COOKING EVENT</p><h2>Your plan starts here</h2></div><button class="text-button" id="reset-button" type="button">Reset</button></div>
+          <form id="settings-form" novalidate></form>
+          <div class="calculate-footer"><button class="primary-button" id="calculate-button" type="submit" form="settings-form">Calculate my plan <span aria-hidden="true">✦</span></button><p>Settings saved on this device.</p></div>
+        </aside>
+        <section class="results-panel" aria-label="Your event plan">
+          <div class="results-toolbar"><div class="result-state" id="result-state" role="status">Preparing your first plan…</div><div class="result-actions"><button class="quiet-button" id="share-button" type="button">Share settings</button><button class="quiet-button" id="export-button" type="button" disabled>Export CSV</button></div></div>
+          <div id="error-message" class="error-message" role="alert" hidden></div>
+          <div id="busy-panel" class="busy-panel" hidden><div class="spinner" aria-hidden="true"></div><div><strong>Finding your best combination</strong><p id="busy-message">Calculating…</p></div></div>
+          <div id="results"><div class="empty-state"><span class="empty-symbol" aria-hidden="true">✦</span><h2>Your next event, planned.</h2><p>Choose your settings and calculate a plan to see resources, gem costs, and your reward schedule.</p></div></div>
+          <p class="estimate-note"><strong>A planning estimate, not a guarantee.</strong> Random drops, catches, combo rewards, and your actual play times can change the outcome. No connection to your game account is needed.</p>
+        </section>
+      </div>
+    </main>
+    <footer class="site-footer"><span>Built for the HatchDragons community. Unofficial and not affiliated with the game developers.</span><a href="https://github.com/Blobbert1234321/HatchDragons_Event_Calculator" target="_blank" rel="noopener noreferrer">Project on GitHub</a></footer>
+  </div>
+  <dialog id="help-dialog" aria-labelledby="help-title"><div class="dialog-head"><h2 id="help-title">A little planning goes a long way.</h2><button class="quiet-button" id="close-help" type="button">Close</button></div><div id="help-content"></div></dialog>
+  <div id="toast" role="status" class="toast" hidden></div>
+</body>
+</html>

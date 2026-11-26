@@ -1,0 +1,8 @@
+{
+  "name": "hatchdragons-event-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node test.mjs"},
+  "description": "Browser-only cooking and fishing event planners. No build step or dependencies."
+}
