@@ -108,7 +108,7 @@ function renderForm(){
     [0,1,2].map(r=>`<h3>Round ${r+1} reward costs</h3><div class="reward-inputs">${get('rewardPointCosts')[r].map((v,i)=>`<input type="number" aria-label="Round ${r+1} reward ${i+1} points" data-path="rewardPointCosts.${r}.${i}" min="0.001" max="100000" step="any" value="${esc(v)}" required>`).join('')}</div>`).join(''));
   const strategy=advanced('Resource use strategy',select('resourceUseStrategy','Strategy',[
     ['lowestGemCost','Lowest gem cost'],['proportional','Proportional use'],['custom','Custom preference']])+
-    '<p class="helper">Additional gems come first. Proportional use aims to preserve similar percentages of both starting supplies.</p>'+
+    '<p class="helper">The calculator finds the lowest extra gem cost, then applies your resource preference among plans with that cost. Proportional use aims to preserve similar percentages of both starting supplies.</p>'+
     (cooking?'':'<p class="helper">For hooks, percentages use the net reduction after combo rewards.</p>')+
     `<div data-custom-preference><label class="field" for="resource-preference"><span class="field-label">Resource preference: <output id="preference-value"></output></span><input id="resource-preference" type="range" data-path="resourcePreference" min="-100" max="100" step="1" value="${get('resourcePreference')}"></label><div class="preference-labels"><span>${cooking?'Fancy bags':'Fish hurries'}</span><span>Balanced</span><span>${cooking?'Instant cooks':'Golden hooks'}</span></div><p class="helper">Move toward the resource you want to use more. The middle matches proportional use.</p></div>`);
   form.innerHTML=goal+owned+boost+strategy+specific+comparison+rules;
@@ -202,7 +202,7 @@ function renderResults(){
     const leftA=Math.max(0,ownedA+p.buyA-p.a),leftB=Math.max(0,ownedB+p.buyB+(cooking?0:p.result.hooksEarned)-p.b);
     html+=block('Resource use',`${{lowestGemCost:'Lowest gem cost',proportional:'Proportional use',custom:'Custom preference'}[c.resourceUseStrategy]}${c.resourceUseStrategy==='custom'?` · ${c.resourcePreference}`:''}. Additional gems are minimized first.`,table(['Resource','Starting stock','Used','Left over','Starting stock depleted'],[
       [cooking?'Fancy bags':'Fish hurries',num(ownedA),num(p.a),num(leftA),ownedA?`${num(100*p.stockA,1)}%`:'—'],
-      [cooking?'Instant cooks':'Golden hooks',num(ownedB),num(p.b),num(leftB),ownedB?`${num(100*p.stockB,1)}%`:'—']])+(!cooking?'<p class="block-note">Hook depletion includes combo rewards. Total hooks used can exceed the reduction in starting stock.</p>':''));
+      [cooking?'Instant cooks':'Golden hooks',num(ownedB),num(p.b),num(leftB),ownedB?`${num(100*p.stockB,1)}%`:'—']])+`<p class="block-note">Resources earned from event rewards aren’t included.${cooking?'':' Expected golden hooks earned through combos are included.'}</p>`);
   }
   if(!cooking&&!done){
     html+=block('Your golden hooks','Combo rewards are credited before later combo generations.',`<div class="phase-grid"><div class="phase-card">Expected hooks earned<strong>${num(p.result.hooksEarned)}</strong></div><div class="phase-card">Expected hooks left over<strong>${num(Math.max(0,c.goldenHooksOwned+p.buyB+p.result.hooksEarned-p.b))}</strong></div></div>`);
