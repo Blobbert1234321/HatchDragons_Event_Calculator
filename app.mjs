@@ -77,10 +77,9 @@ function renderForm(){
       '<p class="helper">Bonus switches above still apply.</p><h3>Bag chances (%)</h3>'+
       vectorInputs('basicBagPercentages',INGREDIENTS,{label:'Basic %',max:100,secondPath:'fancyBagPercentages',secondLabel:'Fancy %',secondMax:100,step:'any'})+
       '<p class="helper">Chances are adjusted to total 100% to account for rounding.</p>')+
-      advanced('Cooking resource rules',check('useEqualAmounts','Use equal fancy bags and instant cooks','This can be infeasible with the multiplier: six fancy ingredients need more than one five-item instant cook.')+
-      `<div class="field-row">${input('ingredientsPerBag','Items per bag',{min:1,max:100})}${input('ingredientsPerCook','Items per free cook',{min:1,max:100})}</div>`+
-      input('ingredientsPerInstantCook','Items per instant cook',{min:1,max:100})+
-      '<p class="helper">During the boosted period, all fancy ingredients require instant cooking. Remaining days use basic bags and free cooks at 1×.</p>');
+      advanced('Bag & cooking amounts',
+      `<div class="field-row">${input('ingredientsPerBag','Ingredients per bag',{min:1,max:100})}${input('ingredientsPerCook','Ingredients per free cook',{min:1,max:100})}</div>`+
+      input('ingredientsPerInstantCook','Ingredients per instant cook',{min:1,max:100}));
   }else{
     specific=advanced('Fish inventory & combos',
       '<p class="helper" style="margin-bottom:13px">Starting fish are already caught but untraded. Leftovers are fish you expect to be unable to trade at the deadline.</p>'+
@@ -109,7 +108,7 @@ function renderForm(){
   const strategy=advanced('Resource use strategy',select('resourceUseStrategy','Strategy',[
     ['lowestGemCost','Lowest gem cost'],['proportional','Proportional use'],['custom','Custom preference']])+
     '<p class="helper">The calculator finds the lowest extra gem cost, then applies your resource preference among plans with that cost. Proportional use aims to preserve similar percentages of both starting supplies.</p>'+
-    (cooking?'':'<p class="helper">For hooks, percentages use the net reduction after combo rewards.</p>')+
+    (cooking?check('useEqualAmounts','Use equal fancy bags and instant cooks','Available with Lowest gem cost. This requires equal item counts, not equal percentages. With the multiplier, six fancy ingredients need more than one five-ingredient instant cook, so equal use may be impossible.'):'<p class="helper">For hooks, percentages use the net reduction after combo rewards.</p>')+
     `<div data-custom-preference><label class="field" for="resource-preference"><span class="field-label">Resource preference: <output id="preference-value"></output></span><input id="resource-preference" type="range" data-path="resourcePreference" min="-100" max="100" step="1" value="${get('resourcePreference')}"></label><div class="preference-labels"><span>${cooking?'Fancy bags':'Fish hurries'}</span><span>Balanced</span><span>${cooking?'Instant cooks':'Golden hooks'}</span></div><p class="helper">Move toward the resource you want to use more. The middle matches proportional use.</p></div>`);
   form.innerHTML=goal+owned+boost+strategy+specific+comparison+rules;
   updateConditional();
