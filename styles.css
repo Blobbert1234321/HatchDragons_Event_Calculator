@@ -11,3 +11,10 @@
 .brand img.site-dragon{width:66px;height:48px;object-fit:contain;flex-shrink:0}
 @media(max-width:480px){.brand img.site-dragon{width:56px;height:42px}}
 
+
+/* Resource preference control */
+#resource-preference{width:100%;accent-color:var(--accent,#ad9bff);cursor:pointer;height:28px;padding:0;}
+.preference-labels{display:flex;justify-content:space-between;gap:12px;font-size:.75rem;margin:0 0 14px;color:var(--muted,#a6adc2);}
+.preference-labels span{flex:1;}
+.preference-labels span:nth-child(2){text-align:center;}
+.preference-labels span:last-child{text-align:right;}

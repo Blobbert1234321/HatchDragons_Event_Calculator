@@ -109,3 +109,22 @@ for(const type of ['cooking','fishing']){
   assert.doesNotThrow(()=>createSpreadsheet(complete));
 }
 console.log('PASS Excel export for both events, ranges, current progress, completed targets, charts, purchase totals, and numeric precision.');
+
+// New strategy results exported directly from the updated MATLAB scripts.
+const strategyCases=JSON.parse(fs.readFileSync(new URL('./test-data/resource-strategies.json',import.meta.url),'utf8'));
+for(const item of strategyCases){
+  const best=calculate(item.type,{...clone(DEFAULTS[item.type]),...item.settings}).scenarios[0].best;
+  for(const [key,value] of Object.entries(item.expected))near(key==='gems'?best.totalGems:best[key],value,`${item.type} strategy ${item.name} ${key}`);
+}
+for(const type of ['cooking','fishing']){
+  assert.equal(DEFAULTS[type].resourceUseStrategy,'lowestGemCost');
+  assert.equal(DEFAULTS[type].resourcePreference,0);
+  assert.throws(()=>prepare(type,{resourceUseStrategy:'invalid'}),/strategy/);
+  assert.throws(()=>prepare(type,{resourcePreference:101}),/preference/);
+  const all=calculate(type,{...clone(DEFAULTS[type]),resourceUseStrategy:'proportional',rangeMode:true,rangeMin:10,rangeMax:12,...(type==='cooking'?{fancyBagsOwned:40,instantCooksOwned:70}:{fishHurriesOwned:40,goldenHooksOwned:300})});
+  assert.equal(all.scenarios.length,3);
+  for(const s of all.scenarios){assert.ok(s.best.score>=s.config.remainingTarget);assert.equal(s.best.totalGems,0);}
+  assert.doesNotThrow(()=>createSpreadsheet(all));
+}
+assert.throws(()=>prepare('cooking',{useEqualAmounts:true,resourceUseStrategy:'proportional'}),/equal resource/);
+console.log('PASS 17 MATLAB strategy comparisons, default strategy, input validation, preference ranges, and spreadsheet exports.');

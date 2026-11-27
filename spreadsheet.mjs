@@ -30,6 +30,10 @@ export function workbookSheets(all,selected=0){
     [`${a} to use`,p.a],[`${b} to use`,p.b],[`${a} to buy`,p.buyA],[`${b} to buy`,p.buyB],
     ['Gems for resources',p.resourceGems],['Gems for multiplier',p.multiplierGems],['ADDITIONAL GEMS NEEDED',p.totalGems],
     ['Points multiplier enabled',c.usePointsMultiplier?'Yes':'No'],['Days with multiplier',c.boostDays],
+    ['Resource strategy',({lowestGemCost:'Lowest gem cost',proportional:'Proportional use',custom:'Custom preference'})[c.resourceUseStrategy]],
+    ...(c.resourceUseStrategy==='custom'?[['Resource preference (-100 to +100)',c.resourcePreference]]:[]),
+    [`${a} left over`,Math.max(0,(cooking?c.fancyBagsOwned:c.fishHurriesOwned)+p.buyA-p.a)],
+    [`${b} left over`,Math.max(0,(cooking?c.instantCooksOwned:c.goldenHooksOwned)+p.buyB+(cooking?0:p.result?.hooksEarned??0)-p.b)],
     ...(p.policy?[['Golden hook policy',p.policy]]:[])
   ],['text','decimal'],'Exported results. Change inputs on the website to calculate a new plan.');
   // Whole counts and gems remain whole; fractional expected hook use is retained.

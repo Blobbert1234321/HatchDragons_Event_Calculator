@@ -37,7 +37,7 @@ function input(path,label,{min=0,max=100000,step=1,hint='',scale=1}={}){
   const value=get(path),id=`f-${path.replaceAll('.','-')}`;
   return `<label class="field" for="${id}"><span class="field-label">${label}</span><input id="${id}" type="number" data-path="${path}" data-scale="${scale}" value="${value==null?'':esc(value*scale)}" min="${min}" max="${max}" step="${step}" required>${hint?`<span class="field-hint">${hint}</span>`:''}</label>`;
 }
-function select(path,label,options){return `<label class="field"><span class="field-label">${label}</span><select data-path="${path}" data-number="true">${options.map(([value,text])=>`<option value="${value}" ${get(path)===value?'selected':''}>${text}</option>`).join('')}</select></label>`;}
+function select(path,label,options){return `<label class="field"><span class="field-label">${label}</span><select data-path="${path}" data-number="${typeof options[0][0]==='number'}">${options.map(([value,text])=>`<option value="${value}" ${get(path)===value?'selected':''}>${text}</option>`).join('')}</select></label>`;}
 function check(path,label,hint=''){return `<label class="check-field"><input type="checkbox" data-path="${path}" ${get(path)?'checked':''}><span>${label}${hint?`<span class="helper">${hint}</span>`:''}</span></label>`;}
 const conditional=(when,content)=>`<div class="conditional" data-when="${when}">${content}</div>`;
 const section=(title,content,icon='✧')=>`<section class="form-section"><h3 class="section-caption"><span class="section-icon" aria-hidden="true">${icon}</span>${title}</h3>${content}</section>`;
@@ -106,17 +106,26 @@ function renderForm(){
     `<div class="field-row">${input('pointsMultiplierCostGems','Multiplier gems',{step:'any'})}${input('pointsMultiplierDays','Multiplier days',{min:.01,max:30,step:'any'})}</div>`+
     '<p class="helper">Exact reward costs are shown below. Changes apply only to this event tab.</p>'+
     [0,1,2].map(r=>`<h3>Round ${r+1} reward costs</h3><div class="reward-inputs">${get('rewardPointCosts')[r].map((v,i)=>`<input type="number" aria-label="Round ${r+1} reward ${i+1} points" data-path="rewardPointCosts.${r}.${i}" min="0.001" max="100000" step="any" value="${esc(v)}" required>`).join('')}</div>`).join(''));
-  form.innerHTML=goal+owned+boost+specific+comparison+rules;
+  const strategy=advanced('Resource use strategy',select('resourceUseStrategy','Strategy',[
+    ['lowestGemCost','Lowest gem cost'],['proportional','Proportional use'],['custom','Custom preference']])+
+    '<p class="helper">Additional gems come first. Proportional use aims to preserve similar percentages of both starting supplies.</p>'+
+    (cooking?'':'<p class="helper">For hooks, percentages use the net reduction after combo rewards.</p>')+
+    `<div data-custom-preference><label class="field" for="resource-preference"><span class="field-label">Resource preference: <output id="preference-value"></output></span><input id="resource-preference" type="range" data-path="resourcePreference" min="-100" max="100" step="1" value="${get('resourcePreference')}"></label><div class="preference-labels"><span>${cooking?'Fancy bags':'Fish hurries'}</span><span>Balanced</span><span>${cooking?'Instant cooks':'Golden hooks'}</span></div><p class="helper">Move toward the resource you want to use more. The middle matches proportional use.</p></div>`);
+  form.innerHTML=goal+owned+boost+strategy+specific+comparison+rules;
   updateConditional();
 }
 function updateConditional(){form.querySelectorAll('[data-when]').forEach(el=>{
   el.hidden=!el.dataset.when.split('&').every(term=>term.startsWith('!')?!get(term.slice(1)):!!get(term));
-});}
+});
+  const custom=form.querySelector('[data-custom-preference]');if(custom)custom.hidden=get('resourceUseStrategy')!=='custom';
+  const value=$('#preference-value');if(value)value.textContent=Number(get('resourcePreference'))===0?'Balanced':`${Math.abs(get('resourcePreference'))}% toward ${get('resourcePreference')<0?(eventType==='cooking'?'fancy bags':'fish hurries'):(eventType==='cooking'?'instant cooks':'golden hooks')}`;
+  const equal=form.querySelector('[data-path="useEqualAmounts"]');if(equal)equal.disabled=get('resourceUseStrategy')!=='lowestGemCost';
+}
 form.addEventListener('input',e=>{
   const el=e.target;if(!el.dataset.path)return;
   if(el.type==='radio'&&!el.checked)return;
-  const value=el.dataset.boolean!==undefined?el.dataset.boolean==='true':el.type==='checkbox'?el.checked:el.type==='number'?el.valueAsNumber/(Number(el.dataset.scale)||1):el.dataset.number?Number(el.value):el.value;
-  set(el.dataset.path,value);save();updateConditional();markStale();
+  const value=el.dataset.boolean!==undefined?el.dataset.boolean==='true':el.type==='checkbox'?el.checked:(el.type==='number'||el.type==='range')?el.valueAsNumber/(Number(el.dataset.scale)||1):el.dataset.number==='true'?Number(el.value):el.value;
+  set(el.dataset.path,value);if(el.dataset.path==='resourceUseStrategy'&&value!=='lowestGemCost'&&eventType==='cooking'){set('useEqualAmounts',false);const equal=form.querySelector('[data-path="useEqualAmounts"]');if(equal)equal.checked=false;}save();updateConditional();markStale();
 });
 form.addEventListener('change',e=>{if(e.target.tagName==='SELECT')e.target.dispatchEvent(new Event('input',{bubbles:true}));});
 function markStale(){if(cache[eventType]){$('#result-state').textContent='Settings changed — calculate to update';$('#result-state').classList.add('stale');}}
@@ -188,6 +197,13 @@ function renderResults(){
   const done=c.remainingTarget===0;
   html+=`<div class="summary-card"><div class="summary-top"><div><div class="summary-title">${done?'TARGET ALREADY REACHED':'YOUR RECOMMENDED PLAN'}</div><h2>${done?'You’ve earned your target.':`${integer(p.a)} ${cooking?'fancy bags':'fish hurries'} + ${num(p.b)} ${cooking?'instant cooks':'golden hooks'}`}</h2><p>${done?'No additional resources or gems are needed.':`The lowest additional gem cost among the modeled resource combinations.${cooking?'':` Hook policy: ${esc(p.policy)}.`}`}</p></div><span class="estimate-badge">${done?'Complete':'Expected-value estimate'}</span></div><div class="summary-bottom"><span>Goal <strong>${c.desiredCompletions} completions</strong></span><span>Still needed <strong>${num(c.remainingTarget)} pts</strong></span><span>Expected final total <strong>${num(c.startPoints+p.score)} pts</strong></span></div></div>`;
   html+=`<div class="metric-grid"><div class="metric-card"><div class="metric-label">${cooking?'Fancy bags':'Fish hurries'} to buy</div><div class="metric-value">${integer(p.buyA)}</div><div class="metric-foot">${num(p.buyA*(cooking?c.gemsPerFancyBag:c.gemsPerFishHurry))} gems · ${cooking?c.fancyBagsOwned:c.fishHurriesOwned} owned</div></div><div class="metric-card"><div class="metric-label">${cooking?'Instant cooks':'Golden hooks'} to buy</div><div class="metric-value">${integer(p.buyB)}</div><div class="metric-foot">${num(p.buyB*(cooking?c.gemsPerInstantCook:c.gemsPerGoldenHook))} gems · ${cooking?c.instantCooksOwned:c.goldenHooksOwned} owned</div></div><div class="metric-card gem-card"><div class="metric-label">Additional gems needed</div><div class="metric-value">${num(p.totalGems)}</div><div class="metric-foot">${num(p.resourceGems)} resources + ${num(p.multiplierGems)} multiplier</div></div></div>`;
+  if(!done){
+    const ownedA=cooking?c.fancyBagsOwned:c.fishHurriesOwned,ownedB=cooking?c.instantCooksOwned:c.goldenHooksOwned;
+    const leftA=Math.max(0,ownedA+p.buyA-p.a),leftB=Math.max(0,ownedB+p.buyB+(cooking?0:p.result.hooksEarned)-p.b);
+    html+=block('Resource use',`${{lowestGemCost:'Lowest gem cost',proportional:'Proportional use',custom:'Custom preference'}[c.resourceUseStrategy]}${c.resourceUseStrategy==='custom'?` · ${c.resourcePreference}`:''}. Additional gems are minimized first.`,table(['Resource','Starting stock','Used','Left over','Starting stock depleted'],[
+      [cooking?'Fancy bags':'Fish hurries',num(ownedA),num(p.a),num(leftA),ownedA?`${num(100*p.stockA,1)}%`:'—'],
+      [cooking?'Instant cooks':'Golden hooks',num(ownedB),num(p.b),num(leftB),ownedB?`${num(100*p.stockB,1)}%`:'—']])+(!cooking?'<p class="block-note">Hook depletion includes combo rewards. Total hooks used can exceed the reduction in starting stock.</p>':''));
+  }
   if(!cooking&&!done){
     html+=block('Your golden hooks','Combo rewards are credited before later combo generations.',`<div class="phase-grid"><div class="phase-card">Expected hooks earned<strong>${num(p.result.hooksEarned)}</strong></div><div class="phase-card">Expected hooks left over<strong>${num(Math.max(0,c.goldenHooksOwned+p.buyB+p.result.hooksEarned-p.b))}</strong></div></div>`);
     if(s.details.some(d=>d.shortfall>1e-8))html+='<p class="warn-note">Some expected leftover reserves exceed the available fish. Those fish types contribute no trade points until their reserve is covered.</p>';

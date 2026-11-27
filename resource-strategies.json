@@ -1,0 +1,356 @@
+[
+  {
+    "type": "cooking",
+    "name": "lowest",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "lowestGemCost",
+      "resourcePreference": 0,
+      "fancyBagsOwned": 40,
+      "instantCooksOwned": 70
+    },
+    "expected": {
+      "a": 10,
+      "b": 28,
+      "gems": 0,
+      "score": 9269.496765076507
+    }
+  },
+  {
+    "type": "cooking",
+    "name": "proportional",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "proportional",
+      "resourcePreference": 0,
+      "fancyBagsOwned": 40,
+      "instantCooksOwned": 70
+    },
+    "expected": {
+      "a": 14,
+      "b": 24,
+      "gems": 0,
+      "score": 9275.722264626464
+    }
+  },
+  {
+    "type": "cooking",
+    "name": "center",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 0,
+      "fancyBagsOwned": 40,
+      "instantCooksOwned": 70
+    },
+    "expected": {
+      "a": 14,
+      "b": 24,
+      "gems": 0,
+      "score": 9275.722264626464
+    }
+  },
+  {
+    "type": "cooking",
+    "name": "bags",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": -100,
+      "fancyBagsOwned": 40,
+      "instantCooksOwned": 70
+    },
+    "expected": {
+      "a": 39,
+      "b": 5,
+      "gems": 0,
+      "score": 9254.124663186318
+    }
+  },
+  {
+    "type": "cooking",
+    "name": "instants",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 100,
+      "fancyBagsOwned": 40,
+      "instantCooksOwned": 70
+    },
+    "expected": {
+      "a": 7,
+      "b": 60,
+      "gems": 0,
+      "score": 9239.542965076507
+    }
+  },
+  {
+    "type": "cooking",
+    "name": "partial",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 50,
+      "fancyBagsOwned": 30,
+      "instantCooksOwned": 50,
+      "remainingEventMode": true
+    },
+    "expected": {
+      "a": 23,
+      "b": 40,
+      "gems": 0,
+      "score": 6438.794314851484
+    }
+  },
+  {
+    "type": "cooking",
+    "name": "zero",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "freeBonusRoundsPerIngredient": 7,
+      "resourceUseStrategy": "proportional",
+      "resourcePreference": 0,
+      "fancyBagsOwned": 0,
+      "instantCooksOwned": 0
+    },
+    "expected": {
+      "a": 24,
+      "b": 14,
+      "gems": 830,
+      "score": 9250.854309270926
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "lowest",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "lowestGemCost",
+      "resourcePreference": 0,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300
+    },
+    "expected": {
+      "a": 40,
+      "b": 19.78438822784388,
+      "gems": 0,
+      "score": 9244.426730660267
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "proportional",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "proportional",
+      "resourcePreference": 0,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300
+    },
+    "expected": {
+      "a": 11,
+      "b": 142.66666666666669,
+      "gems": 0,
+      "score": 9242.555357797552
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "center",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 0,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300
+    },
+    "expected": {
+      "a": 11,
+      "b": 142.66666666666669,
+      "gems": 0,
+      "score": 9242.555357797552
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "hurries",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": -100,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300
+    },
+    "expected": {
+      "a": 40,
+      "b": 19.78438822784388,
+      "gems": 0,
+      "score": 9244.426730660267
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "hooks",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 100,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300
+    },
+    "expected": {
+      "a": 0,
+      "b": 220.66666666666663,
+      "gems": 0,
+      "score": 9244.107962537078
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "leanhooks",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 50,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300
+    },
+    "expected": {
+      "a": 5,
+      "b": 187,
+      "gems": 0,
+      "score": 9243.598560143984
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "fromnow",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "proportional",
+      "resourcePreference": 0,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300,
+      "remainingEventMode": true
+    },
+    "expected": {
+      "a": 23,
+      "b": 201.33333333333334,
+      "gems": 0,
+      "score": 6433.888877778889
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "zero",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "proportional",
+      "resourcePreference": 0,
+      "fishHurriesOwned": 0,
+      "goldenHooksOwned": 0
+    },
+    "expected": {
+      "a": 30,
+      "b": 66.33333333333333,
+      "gems": 970,
+      "score": 9233.508915775088
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "nohookbuy",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "custom",
+      "resourcePreference": 100,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300,
+      "allowGoldenHookPurchases": false
+    },
+    "expected": {
+      "a": 0,
+      "b": 220.66666666666663,
+      "gems": 0,
+      "score": 9244.107962537078
+    }
+  },
+  {
+    "type": "fishing",
+    "name": "complete",
+    "settings": {
+      "desiredCompletions": 2,
+      "dailyActions": 12,
+      "usePointsMultiplier": false,
+      "rangeMode": false,
+      "resourceUseStrategy": "proportional",
+      "resourcePreference": 0,
+      "fishHurriesOwned": 40,
+      "goldenHooksOwned": 300,
+      "remainingEventMode": true,
+      "currentRound": 2,
+      "currentReward": 16,
+      "pointsTowardsNextReward": 0
+    },
+    "expected": {
+      "a": 0,
+      "b": 0,
+      "gems": 0,
+      "score": 0
+    }
+  }
+]

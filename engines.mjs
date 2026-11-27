@@ -7,7 +7,7 @@ export const COSTS = [
 export const INGREDIENTS = ['Mushroom','Potato','Parsnip','Fish','Meat'];
 export const COLORS = ['White','Red','Blue','Yellow','Purple'];
 export const POLICIES = ['No golden hooks','Purple only','Purple + yellow','Purple + yellow + blue','Purple + yellow + blue + red','All colors'];
-const common = {eventDays:7,desiredCompletions:2,dailyActions:10,remainingEventMode:false,
+const common = {resourceUseStrategy:"lowestGemCost",resourcePreference:0,eventDays:7,desiredCompletions:2,dailyActions:10,remainingEventMode:false,
   remainingDays:2.8,currentRound:1,currentReward:12,pointsTowardsNextReward:100,
   usePointsMultiplier:false,pointsMultiplierCostGems:1085,pointsMultiplierDays:5,
   multiplierAlreadyPurchased:false,multiplierDaysRemaining:0,
@@ -53,6 +53,9 @@ export function progressPoints(round,reward,partial,costs=COSTS){
 }
 export function prepare(type,input){
   const c={...clone(DEFAULTS[type]),...clone(input)};
+  assert(['lowestGemCost','proportional','custom'].includes(c.resourceUseStrategy),'Choose a valid resource use strategy.');
+  number(c.resourcePreference,'Resource preference',-100,100);
+  assert(type!=='cooking'||!c.useEqualAmounts||c.resourceUseStrategy==='lowestGemCost','Turn off equal resource amounts to use proportional or custom preference.');
   number(c.eventDays,'Event length',.01,30); number(c.desiredCompletions,'Completions',1,3,true);
   number(c.cooldownHours,'Cooldown',.1,24); number(c.dailyActions,'Daily actions',0,Math.floor(24/c.cooldownHours),true);
   number(c.pointsMultiplierDays,'Multiplier duration',.01,30); number(c.pointsMultiplierCostGems,'Multiplier gem cost');
@@ -171,10 +174,17 @@ export function evaluateCooking(c,bags,instants){
   r.feasible=true;r.score=sum(r.earned);r.collected=collected;
   return r;
 }
+function resourcePreference(c,a,b,ownedA,ownedB,earned=0){
+  const stockA=Math.min(a,ownedA)/Math.max(1,ownedA);
+  const stockB=Math.min(ownedB,Math.max(0,b-earned))/Math.max(1,ownedB);
+  const t=c.resourceUseStrategy==='custom'?c.resourcePreference/100:0;
+  const wa=(1+t)/2,wb=(1-t)/2;
+  return {stockA,stockB,preferenceRank:c.resourceUseStrategy==='lowestGemCost'?[]:[Math.max(wa*stockA,wb*stockB),wa*stockA+wb*stockB]};
+}
 function cookingPlan(c,bags,instants,r){
   const buyA=Math.max(0,bags-c.fancyBagsOwned),buyB=Math.max(0,instants-c.instantCooksOwned);
   const resourceGems=buyA*c.gemsPerFancyBag+buyB*c.gemsPerInstantCook;
-  return {a:bags,b:instants,buyA,buyB,resourceGems,multiplierGems:c.multiplierFee,totalGems:resourceGems+c.multiplierFee,
+  return {...resourcePreference(c,bags,instants,c.fancyBagsOwned,c.instantCooksOwned),a:bags,b:instants,buyA,buyB,resourceGems,multiplierGems:c.multiplierFee,totalGems:resourceGems+c.multiplierFee,
     score:r.score,earlyPoints:r.earlyPoints,latePoints:r.latePoints,result:r};
 }
 function findCooking(c){
@@ -201,7 +211,7 @@ function findCooking(c){
     }
   }
   assert(plans.length,'No plan fits these settings. Equal resource use can conflict with instant-cooking all fancy food during the multiplier. Turn off equal amounts or increase daily actions.');
-  plans.sort((a,b)=>a.totalGems-b.totalGems||(a.a+a.b)-(b.a+b.b)||a.a-b.a);
+  plans.sort((a,b)=>a.totalGems-b.totalGems||(a.preferenceRank[0]??0)-(b.preferenceRank[0]??0)||(a.preferenceRank[1]??0)-(b.preferenceRank[1]??0)||(a.a+a.b)-(b.a+b.b)||a.a-b.a);
   const best=plans[0],r=best.result;
   const details=INGREDIENTS.map((name,i)=>{
     const bonus=r.freeBonus[i]+r.instantBonus[i],base=r.used[i]*BASE[i];
@@ -260,11 +270,11 @@ export function simulateFishing(c,hurries,initialHooks,level){
 function fishingPlan(c,h,allowance,level,r){
   const buyA=Math.max(0,h-c.fishHurriesOwned),buyB=Math.max(0,allowance-c.goldenHooksOwned);
   const resourceGems=buyA*c.gemsPerFishHurry+buyB*c.gemsPerGoldenHook;
-  return {a:h,b:r.hooksUsed,buyA,buyB,resourceGems,multiplierGems:c.multiplierFee,totalGems:resourceGems+c.multiplierFee,
+  return {...resourcePreference(c,h,r.hooksUsed,c.fishHurriesOwned,c.goldenHooksOwned,r.hooksEarned),a:h,b:r.hooksUsed,buyA,buyB,resourceGems,multiplierGems:c.multiplierFee,totalGems:resourceGems+c.multiplierFee,
     level,allowance,policy:POLICIES[level],score:r.score,earlyPoints:r.earlyPoints,latePoints:r.latePoints,result:r};
 }
 function betterFishing(a,b){
-  const aa=[a.resourceGems,a.b,a.a,a.level],bb=[b.resourceGems,b.b,b.a,b.level];
+  const aa=[a.resourceGems,...a.preferenceRank,a.b,a.a,a.level],bb=[b.resourceGems,...b.preferenceRank,b.b,b.a,b.level];
   for(let i=0;i<aa.length;i++)if(Math.abs(aa[i]-bb[i])>1e-8)return aa[i]<bb[i];
   return false;
 }
